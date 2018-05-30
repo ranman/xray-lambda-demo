@@ -1,0 +1,72 @@
+{
+  "Description": "Lambda X-Ray Demo",
+  "Parameters" : {},
+  "Resources": {
+    "SelfieBucket": {
+      "Type": "AWS::S3::Bucket"
+    },
+    "NinjaSelfieBucket": {
+      "Type": "AWS::S3::Bucket"
+    }, 
+    "StoreImage": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Handler": "StoreImage",
+        "Policies": [
+          "AmazonS3FullAccess"
+        ],
+        "Environment" : {
+          "Variables" : {
+            "SELFIE_BUCKET" : { "Ref" : "SelfieBucket" }
+          }
+        },
+        "Events": {
+          "GetResource": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/",
+              "Method": "post"
+            }
+          }
+        }
+      }
+    },
+    "BuildImage": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Handler": "BuildImage",
+        "Policies": [
+          "AmazonDynamoDBFullAccess",
+          "AmazonS3ReadOnly",
+          "AmazonRekognitionFullAccess"
+        ],
+        "Environment" : {
+          "Variables" : {
+            "NINJA_SELFIE_BUCKET" : { "Ref" : "NinjaSelfieBucket" }
+          }
+        }
+      }
+    },
+    "SelfieTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      }
+    }
+  }
+}
